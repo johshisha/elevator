@@ -1,5 +1,6 @@
 require 'slack'
 require 'pry'
+require './User.rb'
 
 TOKEN = 'xoxb-78985393799-aMGpjloVH7QPdsMxS5X3EKDh'
 Slack.configure do | conf |
@@ -7,16 +8,9 @@ Slack.configure do | conf |
 end
 
 client = Slack.realtime
-@waiting_list = {34 => [], 35 => [], 36 => [], 37 => [], 38 => [],
+
+@waiting_list = {34 => [], 35 => [], 36 => [], 37 => [],
                  38 => [], 39 => [], 40 => [], 41 => []}
-
-class User
-  def initialize(userid)
-    @id = userid
-    @name = 'satoshi-sanjo'
-  end
-end
-
 
 def check(size)
   if size >= 5 and size <= 24 then
@@ -56,14 +50,14 @@ end
 
 def push_waiting_list(data)
   floor = data['text'].to_i
+  user = User.new(data['user'])
   if @waiting_list.has_key?(floor) then
-    user = User.new(data['user'])
     @waiting_list[floor].push(user)
-    # p user.name
+    p user.name
     Slack.chat_postMessage(text: "呼ぶまで待っててね",
-      channel: '@satoshi-sanjo', as_user: true)
+      channel: "@#{user.name}", as_user: true)
     Slack.chat_postMessage(text: "#{@waiting_list}",
-      channel: '@satoshi-sanjo', as_user: true)
+      channel: "@#{user.name}", as_user: true)
     allowed_persons = check_number_of_persons(floor)
     if allowed_persons then
       p "push queue"
@@ -73,11 +67,12 @@ def push_waiting_list(data)
     end
   else
     Slack.chat_postMessage(text: "wrong floor number",
-      channel: '@satoshi-sanjo', as_user: true)
+      channel: "@#{user.name}", as_user: true)
   end
 end
 
-def show_list()
+def show_list(data)
+  user = User.new(data['user'])
   lists = []
   @waiting_list.each do |key, value|
     lists.push([key, value.length])
@@ -87,7 +82,7 @@ def show_list()
     text += "#{floor}階\t#{person}人\n"
   end
   Slack.chat_postMessage(text: text,
-    channel: '@satoshi-sanjo', as_user: true)
+    channel: "@#{user.name}", as_user: true)
 end
 
 def sendOKMessage(userName)
@@ -99,13 +94,16 @@ def sendOKMessage(userName)
 end
 
 client.on :hello do
+  user_list = Slack.users_list()['members']
+  User.setAllUserList(user_list)
   puts 'Successfully connected.'
 end
 
 client.on :message do |data|
   if not data['user'] == 'U2AUZBKPH' then
-    if data['text'] == 'list' then
-      show_list()
+    p data['text']
+    if data['text'] == "list" then
+      show_list(data)
       next
     end
     push_waiting_list(data)
