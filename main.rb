@@ -9,8 +9,9 @@ end
 
 client = Slack.realtime
 
-@waiting_list = {34 => [], 35 => [], 36 => [], 37 => [],
+@waiting_list = {34 => [], 35 => [], 36 => [], 37 => [], 38 => [],
                  38 => [], 39 => [], 40 => [], 41 => []}
+@elavator_box_queue = []
 
 def check(size)
   if size >= 5 and size <= 24 then
@@ -60,7 +61,7 @@ def push_waiting_list(data)
       channel: "@#{user.name}", as_user: true)
     allowed_persons = check_number_of_persons(floor)
     if allowed_persons then
-      p "push queue"
+      @elavator_box_queue.push(allowed_persons)
       allowed_persons.each do |allowed_user|
         sendOKMessage(allowed_user.name)
       end
@@ -99,6 +100,15 @@ client.on :hello do
   puts 'Successfully connected.'
 end
 
+def isBoardingUser(userId)
+  @elavator_box_queue[0].each do | user |
+    if user.id == userId then
+      return true
+    end
+  end
+  return false
+end
+
 client.on :message do |data|
   if not data['user'] == 'U2AUZBKPH' then
     p data['text']
@@ -112,7 +122,10 @@ end
 
 client.on :reaction_add do | data |
   if data['reaction'] == 'thumbsup' then
-    "data['user'] でユーザIDを取り出してキューから削除"
+    # リアクションしたユーザがキューの先頭のユーザリストに入っていれば，キューの先頭を削除
+    if isBoardingUser(data['user']) then
+      @elavator_box_queue.shift()
+    end
   end
 end
 
