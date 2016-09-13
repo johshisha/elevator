@@ -7,6 +7,7 @@ Slack.configure do | conf |
 end
 
 client = Slack.realtime
+@waiting_list = {24 => [], 25 => [], 26 => []}
 
 class User
   def initialize(userid)
@@ -15,7 +16,22 @@ class User
   end
 end
 
-waiting_list = {24 => [], 25 => [], 26 => []}
+def push_waiting_list(data)
+  floor = data['text'].to_i
+  if @waiting_list.has_key?(floor) then
+    user = User.new(data['user'])
+    @waiting_list[floor].push(user)
+    # p user.name
+    Slack.chat_postMessage(text: "呼ぶまで待っててね",
+      channel: '@satoshi-sanjo', as_user: true)
+    Slack.chat_postMessage(text: "#{@waiting_list}",
+      channel: '@satoshi-sanjo', as_user: true)
+    p 'sent'
+  else
+    Slack.chat_postMessage(text: "wrong floor number",
+      channel: '@satoshi-sanjo', as_user: true)
+  end
+end
 
 client.on :hello do
   puts 'Successfully connected.'
@@ -23,22 +39,7 @@ end
 
 client.on :message do |data|
   if not data['user'] == 'U2AUZBKPH' then
-    # respond to messages
-    floor = data['text'].to_i
-    if waiting_list.has_key?(floor) then
-      user = User.new(data['user'])
-      waiting_list[floor].push(user)
-      # p user.name
-      Slack.chat_postMessage(text: "呼ぶまで待っててね",
-        channel: '@satoshi-sanjo', as_user: true)
-      Slack.chat_postMessage(text: "#{waiting_list}",
-        channel: '@satoshi-sanjo', as_user: true)
-      p 'sent'
-    else
-      Slack.chat_postMessage(text: "wrong floor number",
-        channel: '@satoshi-sanjo', as_user: true)
-    end
-    #binding.pry
+    push_waiting_list(data)
   end
 end
 
