@@ -21,7 +21,6 @@ def check(size)
   if size >= 5 and size <= 24 then
     return true
   end
-
   return false
 end
 
@@ -33,12 +32,10 @@ def check_number_of_persons(floor)
     @waiting_list[floor] = []
     return res
   end
-
   @waiting_list.each do |key, value|
     if key == floor then
       next
     end
-
     all_person = len + value.length
     if check(all_person) then
       keys = [floor, key]
@@ -78,12 +75,29 @@ def push_waiting_list(data)
   end
 end
 
+def show_list()
+  lists = []
+  @waiting_list.each do |key, value|
+    lists.push([key, value.length])
+  end
+  text = ""
+  lists.sort().each do | floor, person |
+    text += "#{floor}階\t#{person}人\n"
+  end
+  Slack.chat_postMessage(text: text,
+    channel: '@satoshi-sanjo', as_user: true)
+end
+
 client.on :hello do
   puts 'Successfully connected.'
 end
 
 client.on :message do |data|
   if not data['user'] == 'U2AUZBKPH' then
+    if data['text'] == 'list' then
+      show_list()
+      next
+    end
     push_waiting_list(data)
   end
 end
