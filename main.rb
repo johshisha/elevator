@@ -7,7 +7,8 @@ Slack.configure do | conf |
 end
 
 client = Slack.realtime
-@waiting_list = {24 => [], 25 => [], 26 => []}
+@waiting_list = {34 => [], 35 => [], 36 => [], 37 => [], 38 => [],
+                 38 => [], 39 => [], 40 => [], 41 => []}
 
 class User
   def initialize(userid)
