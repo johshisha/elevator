@@ -33,6 +33,14 @@ def push_waiting_list(data)
   end
 end
 
+def sendOKMessage(userName)
+  obj =  Slack.chat_postMessage(text: "次にきたエレベータに乗るべし．\n 乗ったら下のボタンを押してね．\n",
+  channel: '@'+userName, as_user: true)
+  ts = obj['ts']
+  channel = obj['channel']
+  puts Slack.reactions_add(name: 'thumbsup', channel: channel, timestamp: ts)
+end
+
 client.on :hello do
   puts 'Successfully connected.'
 end
