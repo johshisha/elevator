@@ -61,8 +61,9 @@ def push_waiting_list(data)
     allowed_persons = check_number_of_persons(floor)
     if allowed_persons then
       p "push queue"
-      Slack.chat_postMessage(text: "#{allowed_persons}",
-      channel: "@#{user.name}", as_user: true)
+      allowed_persons.each do |allowed_user|
+        sendOKMessage(allowed_user.name)
+      end
     end
   else
     Slack.chat_postMessage(text: "wrong floor number",
@@ -106,6 +107,12 @@ client.on :message do |data|
       next
     end
     push_waiting_list(data)
+  end
+end
+
+client.on :reaction_add do | data |
+  if data['reaction'] == 'thumbsup' then
+    "data['user'] でユーザIDを取り出してキューから削除"
   end
 end
 
