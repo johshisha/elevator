@@ -13,12 +13,12 @@ class User
     @name = getName(id)
   end
 
-  def setAllUserList(user_list)
+  def self.setAllUserList(user_list)
     @@users = user_list
   end
 
   def getName(id)
-    users.each do | user |
+    @@users.each do | user |
       if user['id'] == id then
         return user['name']
       end
