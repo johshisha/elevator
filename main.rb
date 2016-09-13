@@ -16,6 +16,46 @@ class User
   end
 end
 
+
+def check(size)
+  if size >= 5 and size <= 24 then
+    return true
+  end
+
+  return false
+end
+
+def check_number_of_persons(floor)
+  len = @waiting_list[floor].length
+  keys = nil
+  if check(len) then
+    res = @waiting_list.delete(floor)
+    @waiting_list[floor] = []
+    return res
+  end
+
+  @waiting_list.each do |key, value|
+    if key == floor then
+      next
+    end
+
+    all_person = len + value.length
+    if check(all_person) then
+      keys = [floor, key]
+      break
+    end
+  end
+  res = []
+  if keys then
+    keys.each do | key |
+      res += @waiting_list.delete(key)
+      @waiting_list[key] = []
+    end
+    return res
+  end
+  return nil
+end
+
 def push_waiting_list(data)
   floor = data['text'].to_i
   if @waiting_list.has_key?(floor) then
@@ -26,7 +66,12 @@ def push_waiting_list(data)
       channel: '@satoshi-sanjo', as_user: true)
     Slack.chat_postMessage(text: "#{@waiting_list}",
       channel: '@satoshi-sanjo', as_user: true)
-    p 'sent'
+    allowed_persons = check_number_of_persons(floor)
+    if allowed_persons then
+      p "push queue"
+      Slack.chat_postMessage(text: "#{allowed_persons}",
+      channel: '@satoshi-sanjo', as_user: true)
+    end
   else
     Slack.chat_postMessage(text: "wrong floor number",
       channel: '@satoshi-sanjo', as_user: true)
@@ -44,8 +89,3 @@ client.on :message do |data|
 end
 
 client.start
-# slackに接続できたときの処理
-#client.on :hello do
-#  puts 'connected!'
-#  client.message channel: 'elevator_test', text: 'connected!'
-#end
